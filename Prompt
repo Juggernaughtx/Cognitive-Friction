@@ -1,0 +1,30 @@
+An AI-powered service that builds a custom stock and ETF portfolio for retail investors using real-time financial, fundamental, and technical data, aiming for positive expected value and risk control. The system sources premium and public datasets, automatically screens assets, and suggests rebalancing monthly. Assess all workflow, data, risk, compliance, and practical challenges.
+
+
+Develop an AI-powered financial portfolio constructor designed as a premium subscription service for retail and institutional clients, focusing on positive expected value (EV) and asymmetric trades.
+
+The system must ingest a wide range of financial data (fundamental data, technical indicators, news sentiment, and paid data feeds from vendors), implement robust data validation, and automate portfolio screening, construction, and dynamic rebalancing.
+
+It should provide risk management controls, compliance with relevant regulatory and data licensing regimes (e.g., SEC, MiFID II, GDPR), and generate client-ready reporting with explainable AI-driven trade rationale.
+
+Consider product usability, API/data vendor reliability, latency, backtesting best practices (including prevention of overfitting and data snooping), and seamless onboarding of new data sources and markets.
+
+The core goal is a system that can systematically deliver profitable portfolios, minimize avoidable errors, and streamline workflow for competitive advantage.
+
+Enumerate in depth all risks, failure points, improvement opportunities, must-have safeguards, and realistic implementation challenges imaginable by a development/quant/compliance/product/investor team.
+
+Eventually I want an ironclad system that is profitable on a yearly basis. Give me your vision for such product As well as Which premium subscription services that I can use under €100 per month
+------------
+python main.py \
+"A system for advanced retail and institutional investors that constructs and manages swing-trade portfolios by algorithmically digesting premium financial subscription data. The system must ingest and integrate a wide range of financial data: fundamentals, technical indicators, news sentiment, and live/paid data feeds from third-party vendors. Core design mandates robust automated data validation to ensure accuracy, minimize data-related errors, and prevent model drift from poor or stale inputs. Portfolio screening, construction, and dynamic rebalancing are fully automated, leveraging all available quantitative and textual signals. Target: consistent, positive expected value (EV) and meaningful asymmetric return profiles, net of real-world fees, slippage, and transaction costs. The platform must be able to operate as a scalable premium subscription service, supporting both sophisticated retail and institutional clients, and must streamline workflow for the end user. The fundamental goal is to systematically construct profitable portfolios, minimize avoidable modeling and process errors, and improve performance via workflow efficiency and competitive edge. All risks, technical failure points, improvement opportunities, must-have safeguards, and realistic implementation challenges—across development, quant, product, and engineering domains—are in scope. The end vision is an ironclad system with a credible case for robust, annual profitability. Include, as feasible, recommendations for specific data services with a premium cost below €100/month." \
+"Panel must operate with maximum technical and adversarial rigor: No data source, modeling claim, technical decision, mitigation, or operational safeguard should go unexamined. Each agent must interrogate not only the current proposal, but all previous solutions for newly introduced vulnerabilities, edge-cases, side effects, workflow inefficiencies, or infeasibility under scale. Systematically enumerate all points of failure, improvement opportunities, and essential safeguards as imagined by development, quant, technical product, and system engineering perspectives. Attack every data intake, validation, aggregation, signal extraction, and automation flow for both typical and extreme scenarios; surface hidden errors, modeling blind spots, and systemic edge decay. Assumptions about positive EV, asymmetric opportunity, and rebalancing efficiency must be stress-tested—especially versus live execution risk, market friction, and data quality errors. Consensus or closure is not permitted until all plausible technical, operational, and modeling risks are addressed or acknowledged as open; superficial agreement is unacceptable. Synthesis must explicitly enumerate any remaining unaddressed risks, known unknowns, critical workflow or modeling improvements, and gaps in safeguards—even if the system cannot (yet) be made fully 'ironclad.' Repetition, hand-waving, or shallow critique is not tolerated; creativity and adversarial thinking are rewarded. If panel agreement occurs too rapidly or critique lacks depth, the meta-agent must escalate with disruptive scenarios, randomization of agent roles, or the introduction of new antagonistic perspectives." \
+--agents agents.yaml \
+--meta_agent meta_agent.yaml \
+--max_iter 1 \
+--multi_run 1 \
+--verbose
+
+
+
+
+python main.py --config config.yaml

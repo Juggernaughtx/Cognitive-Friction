@@ -44,8 +44,8 @@ def validate_agents_config(config_path="agents.yaml"):
         if missing:
             raise ValueError(f"Agent missing fields: {missing}")
 
-def load_yaml_config(config_path):
-    with open(config_path, "r") as f:
+def load_yaml(path):
+    with open(path, "r") as f:
         return yaml.safe_load(f)
 
 def write_human_log_markdown(path, data):
@@ -54,7 +54,13 @@ def write_human_log_markdown(path, data):
         return f"## {title}\n\n{content.strip()}\n\n"
 
     def _verbatim_block(label, content):
-        return f"### {label}\n\n```\n{content.strip()}\n```\n\n"
+        # Clean: represent dicts/lists as pretty JSON, everything else as string
+        import json
+        if isinstance(content, (dict, list)):
+            pretty = json.dumps(content, indent=2, ensure_ascii=False)
+        else:
+            pretty = str(content)
+        return f"### {label}\n\n```\n{pretty.strip()}\n```\n\n"
 
     with open(path, "w", encoding="utf-8") as f:
         f.write(f"# Cognitive Friction Engine Human Log\n\n")

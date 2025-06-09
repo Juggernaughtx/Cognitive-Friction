@@ -23,6 +23,8 @@ DEFAULTS = {
     "process_instruction": None,
     "user_agents": None,  # newly supported: YAML with user-defined initial agents/archetypes
     "required_archetypes": "archetypes.yaml",
+    "panel_agent_temp": 0.8,
+    "debate_temp": 0.7,
 }
 # ----- Argument-to-config key mapping (for CLI <-> config merge) -----
 ARG_TO_CONF = {
@@ -40,6 +42,8 @@ ARG_TO_CONF = {
     "process_instruction": "process_instruction",
     "user_agents": "user_agents",
     "required_archetypes": "required_archetypes",
+    "panel_agent_temp": "panel_agent_temp",
+    "debate_temp": "debate_temp",
 }
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -57,6 +61,8 @@ def parse_args():
     parser.add_argument("--process-instruction", type=str, default=None)
     parser.add_argument("--user-agents", type=str, default=None, help="YAML file of initial user agent/archetypes")
     parser.add_argument("--required-archetypes", type=str, default=None, help="YAML file with required archetypes")
+    parser.add_argument("--panel-agent-temp", type=float, default=None, help="Temperature for agent archetype/panel creation")
+    parser.add_argument("--debate-temp", type=float, default=None, help="Temperature for critique/crossfire/synthesis")
     return parser.parse_args()
 def merge_config_and_args(cli_args, config: dict):
     """Merges CLI arguments with config, giving CLI priority, then config, then DEFAULTS."""
@@ -67,6 +73,7 @@ def merge_config_and_args(cli_args, config: dict):
         default_val = DEFAULTS[confkey]
         final[confkey] = cli_val if cli_val is not None else conf_val if conf_val is not None else default_val
     return final
+
 async def main():
     args = parse_args()
     # Step 1: Identify config file
@@ -94,6 +101,8 @@ async def main():
     board_path = cfg["board"]
     premise = cfg["premise"]
     process_instruction = cfg["process_instruction"]
+    panel_agent_temp = float(cfg["panel_agent_temp"])
+    debate_temp = float(cfg["debate_temp"])
     # Step 5: Load YAML configs
     meta_agent = load_meta_agent(meta_agent_path)
     board_members = load_board_config(board_path)
@@ -128,10 +137,11 @@ async def main():
             print(f"\n***** Starting multi-run {i+1}/{num_runs} (seed={seed+i}) *****", flush=True)
             print("Building agent panel...", flush=True)
         agents, proposals, panel_log = await get_panel(
-            board_members, premise, process_instruction, board_temp, agent_cap, board_threshold,
+            board_members, premise, process_instruction, panel_agent_temp, agent_cap, board_threshold,
             user_agents=user_agents,
             required_archetypes=required_archetypes,
             verbose=verbose,
+            master_seed=seed
         )
         if verbose:
             print("[Panel chosen]:")
@@ -143,6 +153,7 @@ async def main():
             max_iter, run_id, seed+i, verbose,
             panel_log=panel_log,
             required_archetypes=required_archetypes,
+            critique_crossfire_temp=debate_temp,
         )
         if verbose:
             print(f"***** Finished run {i+1} ({run_id}) *****", flush=True)

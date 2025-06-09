@@ -5,6 +5,7 @@ from pathlib import Path
 from engine.agent_manager import get_panel
 from engine.utils import atomic_write_json, write_human_log_markdown, prompt_user_for_answers
 from engine.gpt_api import call_gpt
+from engine.utils import agent_seed
 import yaml
 import json
 
@@ -23,8 +24,8 @@ def _serialize_question_for_id(question):
     return str(question)
 
 async def run_full_process(
-    premise, process_instruction, agents, meta_agent, max_iter, run_id, seed, verbose,
-    panel_log=None, required_archetypes=None,
+    premise, process_instruction, agents, meta_agent, max_iter, run_id, master_seed, verbose,
+    panel_log=None, required_archetypes=None, critique_crossfire_temp=0.7
 ):
     history = []
     current = premise
@@ -51,7 +52,8 @@ async def run_full_process(
                 "CRITIQUE PHASE: Give all risks (unusual edge cases too), cluster into: [mainstream, low-probability/catastrophic, resolved]. "
                 "For any critique, if you lack a key fact, output a question (req_user=True, with Q). Output strict JSON: {'critiques':[...],'user_questions':[...]}."
             )
-            out = await call_gpt(agent['system'], user_prompt, seed=seed, expect_json=True)
+            agent_specific_seed = agent_seed(master_seed, agent['name'])
+            out = await call_gpt(agent['system'], user_prompt, seed=agent_specific_seed, temperature=critique_crossfire_temp, expect_json=True)
             critiques[agent['name']] = out.get("critiques", [])
             if verbose:
                 preview = out.get('critiques', out)
@@ -85,7 +87,8 @@ async def run_full_process(
                 f"Ground truths/clarifications: {user_answers}\n"
                 "CROSSFIRE PHASE: For each peer, rebut or expand. Output as plaintext."
             )
-            crossfire = await call_gpt(agent["system"], user_prompt, seed=seed+1)
+            crossfire_seed = agent_seed(master_seed, f"{agent['name']}_crossfire")
+            crossfire = await call_gpt(agent["system"], user_prompt, temperature=critique_crossfire_temp, seed=crossfire_seed)
             crossfires[agent['name']] = crossfire
             if verbose:
                 printable_preview = crossfire[:180] + ('...' if len(crossfire) > 180 else '')
@@ -98,11 +101,12 @@ async def run_full_process(
             "{'refined_idea': ..., 'addressed_risks': [...], 'open_risks': [...], 'risk_clusters': {theme: [risks]}, 'progress': ...}.\n"
             "Summarize: are open risks truly novel or clustering to past ones? Which (if any) are only infinite regress or low-value? What degree of convergence?"
         )
+        synthesis_seed = agent_seed(master_seed, f"{agent['name']}_synthesis")
         synthesis = await call_gpt(
             "Synthesis expert",
             user_prompt + f"\nCritiques: {critiques}\nCrossfires: {crossfires}\nGround truths: {ground_truths}\n",
             expect_json=True,
-            seed=seed+2,
+            seed=synthesis_seed,
         )
         if verbose:
             print(f"Refined Idea: {synthesis.get('refined_idea','')[:120]}", flush=True)

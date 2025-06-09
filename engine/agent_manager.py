@@ -2,6 +2,7 @@
 
 import yaml
 from engine.gpt_api import call_gpt
+from engine.utils import agent_seed
 
 def load_board_config(path="agents_board.yaml"):
     with open(path, "r") as f:
@@ -34,7 +35,7 @@ def _required_archetype_codes(required_archetypes):
     # required_archetypes now is a list of dicts, with .code fields
     return set([a["code"] for a in required_archetypes])
 
-async def check_and_augment_archetypes(agents, required_archetypes, board_members, premise, process_instruction, temperature, verbose=False):
+async def check_and_augment_archetypes(agents, required_archetypes, board_members, premise, process_instruction, temperature, verbose=False, seed=None):
     present = _archetype_coverage(agents)
     required_codes = _required_archetype_codes(required_archetypes)
     missing = required_codes - present
@@ -51,7 +52,8 @@ async def check_and_augment_archetypes(agents, required_archetypes, board_member
                      f"Description: {archinfo.get('description', '')}\n" + \
                      f"Propose ONE agent with that archetype, strictly with fields: 'name', 'system', 'archetype', 'rationale'."
             try:
-                candidate = await call_gpt(bm['system'], prompt, expect_json=True, temperature=temperature)
+                candidate_seed = agent_seed(seed, f"{bm['name']}_{code}")
+                candidate = await call_gpt(bm['system'], prompt, expect_json=True, temperature=temperature, seed=candidate_seed)
                 if candidate and "archetype" in candidate and candidate["archetype"] == code:
                     log.append({"archetype_added": code, "by": bm["name"]})
                     if verbose:
@@ -63,7 +65,7 @@ async def check_and_augment_archetypes(agents, required_archetypes, board_member
     return _deduplicate_agents(agents), log
 
 async def get_panel(board_members, premise, process_instruction, temperature, max_agents, threshold=2,
-                    user_agents=None, required_archetypes=None, verbose=False):
+                    user_agents=None, required_archetypes=None, verbose=False, master_seed=None):
     user_agents = user_agents or []
     proposals = []
     # Get codes for archetypes from the current required archetype object list
@@ -73,7 +75,7 @@ async def get_panel(board_members, premise, process_instruction, temperature, ma
     initial_agents = _deduplicate_agents(user_agents)
     for bm in board_members:
         agents = await propose_agents(
-            bm, premise, process_instruction, temperature, max_agents, present_archetypes=present_archetypes
+            bm, premise, process_instruction, temperature, max_agents, present_archetypes=present_archetypes, seed=master_seed
         )
         valid_agents = []
         for a in agents:
@@ -89,7 +91,7 @@ async def get_panel(board_members, premise, process_instruction, temperature, ma
     archetype_log = []
     if required_archetypes:
         combined_agents, archetype_log = await check_and_augment_archetypes(
-            combined_agents, required_archetypes, board_members, premise, process_instruction, temperature, verbose=verbose
+            combined_agents, required_archetypes, board_members, premise, process_instruction, temperature, verbose=verbose, seed=master_seed
         )
     all_candidates = {}
     for prop in proposals:
@@ -118,7 +120,7 @@ async def get_panel(board_members, premise, process_instruction, temperature, ma
             print(f"- {agent.get('archetype','?')}: {agent['name']} [{agent.get('rationale','')[:60]}...]")
     return combined, proposals, panel_log
 
-async def propose_agents(board_member, premise, process_instruction, temperature, max_agents, present_archetypes=None):
+async def propose_agents(board_member, premise, process_instruction, temperature, max_agents, present_archetypes=None, seed=None):
     pres_arch = list(present_archetypes) if present_archetypes else []
     user_prompt = f"""
     BUSINESS IDEA: {premise}
@@ -131,5 +133,6 @@ async def propose_agents(board_member, premise, process_instruction, temperature
     Output your answer STRICTLY as a JSON list under the key "panel_agents".
     """
     system_prompt = board_member["system"]
-    result = await call_gpt(system_prompt, user_prompt, temperature=temperature, expect_json=True)
+    proposal_seed = agent_seed(seed, board_member["name"]) if seed is not None else None
+    result = await call_gpt(system_prompt, user_prompt, temperature=temperature, expect_json=True, seed=proposal_seed)
     return result.get("panel_agents", [])

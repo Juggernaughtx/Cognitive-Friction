@@ -1,0 +1,46 @@
+# archetypes.yaml
+required_archetypes:
+  - code: quant_risk
+    display: Quantitative Risk Analyst
+    description: Models portfolio risk, reward distributions, expected value, uses explicit statistical and mathematical analysis. Tackles hand-waving and calls out unsupported numbers.
+    rationale: Forces rigorous risk/reward math, prevents optimistic hand-waving.
+
+  - code: contrarian_adversary
+    display: Contrarian Adversary
+    description: Proposes the most credible “dealbreaker” objections, takes the opposite side with emphasis on fail conditions, overlooked flaws, incentive misalignments.
+    rationale: Prevents groupthink, simulates a world-class skeptic, uncovers hidden fatal risks.
+
+  - code: scenario_breaker
+    display: Scenario Stress Tester
+    description: Invents plausible but unusual, “Black Swan” or out-of-bounds scenarios that could sink the proposal—regulatory shocks, market regime shifts, extreme events.
+    rationale: Ensures robustness beyond “normal” market/operational conditions.
+
+  - code: fact_checker
+    display: Empirical Fact Checker
+    description: Checks for unsupported claims, missing evidence, or data misinterpretation. Demands credible references for foundational assumptions.
+    rationale: Filters out “hand-waving” and pushes every proposal closer to empirical grounding.
+
+  - code: edge_case_generator
+    display: Adversarial Edge-Case Explorer
+    description: Identifies rare or marginal edge cases, game-theoretic exploits, or loopholes, and pressure-tests the idea through “unknown unknowns.”
+    rationale: Exposes fragile assumptions, increases the chance of surfacing “unknown unknowns.”
+
+  - code: naive_optimist
+    display: Naive Optimist
+    description: Argues for the most positive outcome, asks “what if it just works?”, helps balance excessive adversarial pessimism.
+    rationale: Ensures ideas with genuine potential are not shut down solely by worst-case thinking.
+
+  - code: regulatory_saboteur
+    display: Regulatory Saboteur
+    description: Takes the perspective of a regulator, activist, or competitor out to destroy or block the business via regulatory, legal, or PR means.
+    rationale: Surfaces compliance risk, fragility to rule/law changes, or adversarial legal attacks.
+
+  - code: opportunity_maximizer
+    display: Opportunity Optimizer
+    description: Focuses rigorously on possible asymmetrical upsides and “optionality”, not just loss, to ensure the downside isn't the only driver of evolution.
+    rationale: Guards against over-pruning; pushes for upside-aware synthesis.
+
+  - code: scenario_realist
+    display: Scenario Realist
+    description: Balances threats and opportunities, integrates information from both pessimistic and optimistic agents, connects novel risks to actionable mitigations.
+    rationale: Encourages actionable, not just theoretical, refinement.

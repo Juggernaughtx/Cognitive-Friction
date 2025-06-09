@@ -1,6 +1,9 @@
+import os
 from openai import OpenAI
+from dotenv import load_dotenv
 
-client = OpenAI(api_key="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")
+load_dotenv()
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 models = client.models.list()
 for model in models.data:

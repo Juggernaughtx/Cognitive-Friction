@@ -2,7 +2,7 @@
 # Async OpenAI call with retries and truncation
 # engine/gpt_api.py – OpenAI SDK >= 1.0.0 compatible
 
-import asyncio
+import logging
 import os
 import json
 from openai import AsyncOpenAI
@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-MODEL = os.getenv("OPENAI_MODEL", "gpt-4o") # update as needed
+MODEL = os.getenv("OPENAI_MODEL", "gpt-4.1-mini") # update as needed
 
 def force_json_instruction(prompt) -> str:
     # Adds a hard "return ONLY valid JSON" line
@@ -52,9 +52,13 @@ async def call_gpt(
             # [OpenAI guarantees JSON if you do the above right]
             resp = response.choices[0].message.content.strip()
             if expect_json:
-                return json.loads(resp)
-            else:
-                return resp
+                try:
+                    return json.loads(resp)
+                except Exception as e:
+                    # Fail fast: log the problem and raise for the caller to decide
+                    logging.error(f"LLM JSON parse error: {e}\n---RAW OUTPUT BEGIN---\n{resp}\n---RAW OUTPUT END---")
+                    raise
+            return resp
         except json.JSONDecodeError:
             # Retry: If first attempt fails, send LLM its own output and ask for valid JSON conversion
             if attempt == tries - 1:

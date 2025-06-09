@@ -1,16 +1,17 @@
-# main.py
+# engine/controller.py
 
 import asyncio
 import yaml
 from pathlib import Path
+import re
 
 from engine.utils import atomic_write_json, write_human_log_markdown, agent_seed
 from engine.gpt import call_gpt
 
-def load_agents(config_path="agents.yaml"):
-    with open(config_path, "r") as f:
-        config = yaml.safe_load(f)
-    return config["agents"]
+# def load_agents(config_path="agents.yaml"):
+#     with open(config_path, "r") as f:
+#         config = yaml.safe_load(f)
+#     return config["agents"]
 
 def load_meta_agent(config_path="meta_agent.yaml"):
     with open(config_path, "r") as f:
@@ -97,7 +98,7 @@ async def critique_phase(idea, process_instruction, agents, memory, previous_cri
         )
 
         seed_val = agent_seed(master_seed, f"critique-{agent_name}-{iteration}") if master_seed is not None else None
-        tasks.append(call_gpt(background, user_prompt, seed=seed_val, max_tokens=32))
+        tasks.append(call_gpt(background, user_prompt, seed=seed_val))
     results = await asyncio.gather(*tasks)
     agent_critiques = {a["name"]: r for a, r in zip(agents, results)}
 
@@ -131,7 +132,7 @@ async def crossfire_phase(critiques, process_instruction, agents, verbose, maste
             f"\nProcess expectations: {process_instruction}"
         )
         seed_val = agent_seed(master_seed, f"crossfire-{agent_name}-{iteration}") if master_seed is not None else None
-        tasks.append(call_gpt(background, user_prompt, seed=seed_val, max_tokens=32))
+        tasks.append(call_gpt(background, user_prompt, seed=seed_val))
     results = await asyncio.gather(*tasks)
     crossfire_responses = {a["name"]: r for a, r in zip(agents, results)}
 
@@ -166,6 +167,13 @@ async def synthesis_phase(critiques, crossfires, process_instruction, verbose, m
         print(f"\n\033[92m[SYNTHESIS]\033[0m\n{result}\n")
     return result
 
+def extract_json_block(text):
+    # Try to find a valid JSON object in text, even if surrounded by codefences, extra text, or comments.
+    match = re.search(r'\{.*?\}', text, flags=re.DOTALL)
+    if match:
+        return match.group(0)
+    return text.strip()
+    
 async def meta_decision_phase(critiques, crossfires, history, process_instruction, meta_agent, verbose, master_seed, iteration):
     prompt = (
         "META-DECISION PHASE:\n"
@@ -182,12 +190,15 @@ async def meta_decision_phase(critiques, crossfires, history, process_instructio
     )
     seed_val = agent_seed(master_seed, f"meta-{iteration}") if master_seed is not None else None
     result = await call_gpt(meta_agent["system"], prompt, seed=seed_val)
-    import json
+
+    raw_result = result
     try:
-        decision = json.loads(result)
+        clean_json = extract_json_block(result)
+        decision = json.loads(clean_json)
         if not isinstance(decision, dict) or "halt" not in decision:
             decision = {"halt": False, "rationale": "Parse error or missing 'halt'—continuing by default."}
     except Exception:
+        # --> ADD DEBUG: log the full raw_result to logs, including run_id and iteration
         decision = {"halt": False, "rationale": "Failed to parse meta decision as JSON—default to continue."}
     if verbose:
         print(f"\n\033[93m[Meta-Agent Decision]\033[0m\n{decision}\n")

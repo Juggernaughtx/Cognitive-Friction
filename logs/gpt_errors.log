@@ -1,0 +1,4 @@
+GPT call failed after 3 attempts. Error: BadRequestError('Error code: 400 - {\'error\': {\'message\': "\'messages\' must contain the word \'json\' in some form, to use \'response_format\' of type \'json_object\'.", \'type\': \'invalid_request_error\', \'param\': \'messages\', \'code\': None}}')
+Prompt:
+
+    Business idea: A system for advanced retail and institutional investors that constructs and manages swing-trade portfolios by algorithmically digesting premium financial subscription data. The sy

@@ -132,7 +132,7 @@ async def run_full_process(
             f"\nCurrent risk clusters: {risk_clusters}\nPast entropy: {board_entropy}" +
             f"\nRequired archetypes: {required_archetypes}\nPanel: {[a.get('archetype') for a in agents]}",
             expect_json=True,
-            seed=seed+3,
+            seed=master_seed+3,
         )
         if verbose:
             print(f"META-AGENT DECISION: {'HALT' if meta_decision.get('halt') else 'CONTINUE'}; RATIONALE: {meta_decision.get('rationale','NO RATIONALE')}", flush=True)
